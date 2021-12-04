@@ -1,5 +1,5 @@
 REPO:=martkcz/php-alpine
-VERSION:=8.0.13
+VERSION:=8.0.13-r1
 
 all: build release
 
