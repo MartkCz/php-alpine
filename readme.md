@@ -4,14 +4,14 @@ PHP 8 with composer
 
 ## Production
 ```dockerfile
-# PHP
+
 USER root
 
-RUN cp /examples/php/99_production.ini /etc/php8/conf.d/ && \
-    rm /etc/php8/conf.d/98_development.ini
+# PHP
+RUN cp /production/php/99_settings.ini /etc/php8/conf.d/
     
-## PHP-fpm    
-RUN cp /examples/php-fpm/www-production.ini /etc/php8/fpm-conf.d/www.ini
+# PHP-fpm    
+RUN cp /production/php-fpm/www.conf /etc/php8/php-fpm.d/
 
 USER www-data
 ```
@@ -21,8 +21,8 @@ USER www-data
 ```dockerfile
 USER root
 
-RUN rm /usr/lib/php8/modules/swoole.so && \
-    rm /etc/php8/conf.d/00_swoole.ini
+# Remove swoole
+RUN rm /usr/lib/php8/modules/swoole.so && rm /etc/php8/conf.d/00_swoole.ini
     
 USER www-data
 ```

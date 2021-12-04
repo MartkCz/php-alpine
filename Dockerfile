@@ -90,18 +90,20 @@ RUN ( \
     rm -rf /tmp/ext-swoole \
     )
 
-COPY conf/php/98_development.ini /etc/php8/conf.d/
-COPY conf/php/99_production.ini /examples/php/
+COPY conf/php/99_settings.ini /etc/php8/conf.d/
+COPY conf/php/99_production.ini /production/php/99_settings.ini
 
 COPY conf/php-fpm/php-fpm.conf /etc/php8/
-COPY conf/php-fpm/www-development.conf /etc/php8/php-fpm.d/www.conf
-COPY conf/php-fpm/www-production.conf /examples/php-fpm/
+COPY conf/php-fpm/www.conf /etc/php8/php-fpm.d/
+COPY conf/php-fpm/www-production.conf /production/php-fpm/www.conf
 
 RUN mkdir -p /app/www
 
 RUN chown -R www-data.www-data /app && \
     chown -R www-data.www-data /run && \
     chown -R www-data.www-data /var/log
+
+WORKDIR /app
 
 # Switch to use a non-root user from here on
 USER www-data
