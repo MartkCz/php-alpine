@@ -66,7 +66,7 @@ RUN apk --no-cache add php8=${PHP_VERSION} \
 
 # Symlink php8 => php
 RUN ln -s /usr/bin/php8 /usr/bin/php
-RUN ln -s /usr/bin/php8-fpm /usr/bin/php-fpm
+RUN ln -s /usr/sbin/php-fpm8 /usr/bin/php-fpm
 RUN ln -s /usr/bin/phpize8 /usr/bin/phpize
 RUN ln -s /usr/bin/php-config8 /usr/bin/php-config
 
