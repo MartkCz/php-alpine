@@ -1,4 +1,4 @@
-# PHP-8.0.13 alpine 
+# PHP-8.0.14 alpine 
 
 https://hub.docker.com/repository/docker/martkcz/php-alpine
 

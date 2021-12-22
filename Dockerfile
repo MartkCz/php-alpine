@@ -1,6 +1,6 @@
 FROM alpine:3.15
 
-ARG PHP_VERSION="8.0.13-r0"
+ARG PHP_VERSION="8.0.14-r0"
 ARG SWOOLE_VERSION="4.8.3"
 
 # ensure www-data user exists
