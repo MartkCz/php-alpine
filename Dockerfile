@@ -97,11 +97,12 @@ COPY conf/php-fpm/php-fpm.conf /etc/php8/
 COPY conf/php-fpm/www.conf /etc/php8/php-fpm.d/
 COPY conf/php-fpm/www-production.conf /production/php-fpm/www.conf
 
-RUN mkdir -p /app/www
+RUN mkdir -p /app/www && mkdir /.composer
 
 RUN chown -R www-data.www-data /app && \
     chown -R www-data.www-data /run && \
-    chown -R www-data.www-data /var/log
+    chown -R www-data.www-data /var/log && \
+    chown -R www-data.www-data /.composer
 
 WORKDIR /app
 
