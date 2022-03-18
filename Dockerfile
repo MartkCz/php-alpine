@@ -1,14 +1,13 @@
 FROM alpine:3.15
 
-ARG PHP_VERSION="8.0.14-r0"
-ARG SWOOLE_VERSION="4.8.3"
+ARG PHP_VERSION="8.1.3-r1"
 
 # ensure www-data user exists
 RUN set -eux; \
 	adduser -u 82 -D -S -G www-data www-data
 # 82 is the standard uid/gid for "www-data" in Alpine
 
-## From https://github.com/docker-library/php/blob/master/8.0/alpine3.15/fpm/Dockerfile
+## From https://github.com/docker-library/php/blob/master/8.1/alpine3.15/fpm/Dockerfile
 ENV PHPIZE_DEPS \
 		autoconf \
 		dpkg-dev dpkg \
@@ -20,75 +19,65 @@ ENV PHPIZE_DEPS \
 		pkgconf \
 		re2c
 
-## Iconv fix
+# Iconv fix
 RUN apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/v3.12/community/ --allow-untrusted gnu-libiconv=1.15-r2
 ENV LD_PRELOAD /usr/lib/preloadable_libiconv.so
 
-RUN apk --no-cache add php8=${PHP_VERSION} \
+RUN apk --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/main add \
+    icu-libs \
+    && apk --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/community add \
+    # Current packages don't exist in other repositories
+    libavif \
+    && apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ --allow-untrusted gnu-libiconv \
+    # Packages \
     curl \
-    php8-ctype \
-    php8-dev \
-    php8-curl \
-    php8-dom \
-    php8-exif \
-    php8-fileinfo \
-    php8-fpm \
-    php8-gd \
-    php8-iconv \
-    php8-intl \
-    php8-mbstring \
-    php8-mysqli \
-    php8-opcache \
-    php8-openssl \
-    php8-pecl-imagick \
-    php8-pecl-redis \
-    php8-phar \
-    php8-session \
-    php8-simplexml \
-    php8-soap \
-    php8-xml \
-    php8-xmlreader \
-    php8-zip \
-    php8-zlib \
-    php8-bcmath \
-    php8-pcntl \
-    php8-sodium \
-    php8-sockets \
-    php8-pdo \
-    php8-pdo_mysql \
-    php8-xmlwriter \
-    php8-tokenizer \
-    ## Pecl
-#    php8-pecl-imagick \
-    php8-pecl-redis \
-    ## Tools
+    php81 \
+    php81-dev \
+    php81-common \
+    php81-gd \
+    php81-xmlreader \
+    php81-fileinfo \
+    php81-bcmath \
+    php81-ctype \
+    php81-curl \
+    php81-exif \
+    php81-iconv \
+    php81-intl \
+    php81-mbstring \
+    php81-opcache \
+    php81-openssl \
+    php81-pcntl \
+    php81-phar \
+    php81-session \
+    php81-xml \
+    php81-xsl \
+    php81-zip \
+    php81-zlib \
+    php81-dom \
+    php81-fpm \
+    php81-sodium \
+    php81-pecl-imagick \
+    php81-pecl-redis \
+    php81-simplexml \
+    php81-sockets \
+    php81-pdo \
+    php81-pdo_mysql \
+    php81-tokenizer \
+    php81-soap \
+    # Iconv Fix
+    php81-pecl-apcu \
+    # Tools
     vim
 
-# Symlink php8 => php
-RUN ln -s /usr/bin/php8 /usr/bin/php
-RUN ln -s /usr/sbin/php-fpm8 /usr/bin/php-fpm
-RUN ln -s /usr/bin/phpize8 /usr/bin/phpize
-RUN ln -s /usr/bin/php-config8 /usr/bin/php-config
+# Symlink php81 => php
+RUN ln -s /usr/bin/php81 /usr/bin/php
+RUN ln -s /usr/sbin/php-fpm81 /usr/bin/php-fpm
+RUN ln -s /usr/bin/phpize81 /usr/bin/phpize
+RUN ln -s /usr/bin/php-config81 /usr/bin/php-config
 
 ## Composer
 RUN curl -sfL https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer && \
         chmod +x /usr/bin/composer
-
-## Swoole (only in edge)
-RUN ( \
-    mkdir /tmp/ext-swoole && \
-    cd /tmp/ext-swoole && \
-    apk add --no-cache libstdc++ && \
-    apk add --no-cache --virtual .build-deps $PHPIZE_DEPS curl-dev openssl-dev pcre-dev pcre2-dev zlib-dev && \
-    curl -sfL https://github.com/swoole/swoole-src/archive/v${SWOOLE_VERSION}.tar.gz -o /tmp/ext-swoole/swoole.tar.gz && \
-    tar xfz swoole.tar.gz --strip-components=1 -C . && \
-    phpize && \
-    ./configure --enable-openssl --enable-sockets --enable-http2 --enable-swoole-json --enable-swoole-curl && \
-    make && make install && \
-    echo "extension=swoole" > /etc/php8/conf.d/00_swoole.ini && \
-    apk del .build-deps && \
-    rm -rf /tmp/ext-swoole \
-    )
 
 COPY conf/php/99_settings.ini /etc/php8/conf.d/
 COPY conf/php/99_production.ini /production/php/99_settings.ini
