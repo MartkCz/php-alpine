@@ -1,11 +1,13 @@
 FROM alpine:3.15
 
-ARG PHP_VERSION="8.1.3-r1"
+ARG PHP
 
 # ensure www-data user exists
 RUN set -eux; \
 	adduser -u 82 -D -S -G www-data www-data
 # 82 is the standard uid/gid for "www-data" in Alpine
+
+ENV PHP_SUFFIX="$PHP"
 
 ## From https://github.com/docker-library/php/blob/master/8.1/alpine3.15/fpm/Dockerfile
 ENV PHPIZE_DEPS \
@@ -31,60 +33,66 @@ RUN apk --no-cache --repository https://dl-cdn.alpinelinux.org/alpine/edge/main 
     && apk add --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing/ --allow-untrusted gnu-libiconv \
     # Packages \
     curl \
-    php81 \
-    php81-dev \
-    php81-common \
-    php81-gd \
-    php81-xmlreader \
-    php81-fileinfo \
-    php81-bcmath \
-    php81-ctype \
-    php81-curl \
-    php81-exif \
-    php81-iconv \
-    php81-intl \
-    php81-mbstring \
-    php81-opcache \
-    php81-openssl \
-    php81-pcntl \
-    php81-phar \
-    php81-session \
-    php81-xml \
-    php81-xsl \
-    php81-zip \
-    php81-zlib \
-    php81-dom \
-    php81-fpm \
-    php81-sodium \
-    php81-pecl-imagick \
-    php81-pecl-redis \
-    php81-simplexml \
-    php81-sockets \
-    php81-pdo \
-    php81-pdo_mysql \
-    php81-tokenizer \
-    php81-soap \
+    php$PHP_SUFFIX \
+    php$PHP_SUFFIX-dev \
+    php$PHP_SUFFIX-common \
+    php$PHP_SUFFIX-gd \
+    php$PHP_SUFFIX-xmlreader \
+    php$PHP_SUFFIX-fileinfo \
+    php$PHP_SUFFIX-bcmath \
+    php$PHP_SUFFIX-ctype \
+    php$PHP_SUFFIX-curl \
+    php$PHP_SUFFIX-exif \
+    php$PHP_SUFFIX-iconv \
+    php$PHP_SUFFIX-intl \
+    php$PHP_SUFFIX-mbstring \
+    php$PHP_SUFFIX-opcache \
+    php$PHP_SUFFIX-openssl \
+    php$PHP_SUFFIX-pcntl \
+    php$PHP_SUFFIX-phar \
+    php$PHP_SUFFIX-session \
+    php$PHP_SUFFIX-xml \
+    php$PHP_SUFFIX-xsl \
+    php$PHP_SUFFIX-zip \
+    php$PHP_SUFFIX-zlib \
+    php$PHP_SUFFIX-dom \
+    php$PHP_SUFFIX-fpm \
+    php$PHP_SUFFIX-sodium \
+    php$PHP_SUFFIX-pecl-imagick \
+    php$PHP_SUFFIX-pecl-redis \
+    php$PHP_SUFFIX-simplexml \
+    php$PHP_SUFFIX-sockets \
+    php$PHP_SUFFIX-pdo \
+    php$PHP_SUFFIX-pdo_mysql \
+    php$PHP_SUFFIX-tokenizer \
+    php$PHP_SUFFIX-soap \
     # Iconv Fix
-    php81-pecl-apcu \
+    php$PHP_SUFFIX-pecl-apcu \
     # Tools
     vim
 
 # Symlink php81 => php
-RUN ln -s /usr/bin/php81 /usr/bin/php
-RUN ln -s /usr/sbin/php-fpm81 /usr/bin/php-fpm
-RUN ln -s /usr/bin/phpize81 /usr/bin/phpize
-RUN ln -s /usr/bin/php-config81 /usr/bin/php-config
+RUN ln -s /usr/bin/php$PHP_SUFFIX /usr/bin/php
+RUN ln -s /usr/sbin/php-fpm$PHP_SUFFIX /usr/bin/php-fpm
+RUN ln -s /usr/bin/phpize$PHP_SUFFIX /usr/bin/phpize
+RUN ln -s /usr/bin/php-config$PHP_SUFFIX /usr/bin/php-config
 
 ## Composer
 RUN curl -sfL https://getcomposer.org/installer | php -- --install-dir=/usr/bin --filename=composer && \
         chmod +x /usr/bin/composer
 
-COPY conf/php/99_settings.ini /etc/php8/conf.d/
-COPY conf/php/99_production.ini /production/php/99_settings.ini
+# Configs php
+COPY conf/php/99_settings.dev.ini /etc/php$PHP_SUFFIX/conf.d/99_settings.ini
 
-COPY conf/php-fpm/php-fpm.conf /etc/php8/
-COPY conf/php-fpm/www.conf /etc/php8/php-fpm.d/
-COPY conf/php-fpm/www-production.conf /production/php-fpm/www.conf
+# Configs php production
+COPY conf/php/99_settings.prod.ini /prod/php/99_settings.ini
+
+# Configs php-fpm
+COPY conf/php-fpm/php-fpm.conf /etc/php$PHP_SUFFIX/
+COPY conf/php-fpm/www.dev.conf /etc/php$PHP_SUFFIX/php-fpm.d/www.conf
+
+# Configs php-fpm production
+COPY conf/php-fpm/www.prod.conf /prod/php-fpm/www.conf
 
 RUN mkdir -p /app/www && mkdir /.composer
 
@@ -98,4 +106,8 @@ WORKDIR /app
 # Switch to use a non-root user from here on
 USER www-data
 
-CMD ["php", "-a"]
+COPY entrypoint /entrypoint
+
+ENTRYPOINT ["/entrypoint"]
+
+CMD ["/usr/bin/php-fpm", "-R", "--nodaemonize"]
