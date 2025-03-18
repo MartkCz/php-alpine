@@ -1,0 +1,51 @@
+version: 3
+
+env:
+  IMAGE: martkcz/php-alpine
+
+tasks:
+  build-83-swoole:
+    desc: 'Build the image for PHP 8.3'
+    cmds:
+        - task: build
+          vars:
+            PHP_VERSION: '8.3'
+            DOCKERFILE_PATH: 'swoole'
+  push-83-swoole:
+    desc: 'Push the image for PHP 8.3'
+    deps: ['build-83-swoole']
+    cmds:
+        - task: push
+          vars:
+            PHP_VERSION: '8.3'
+            DOCKERFILE_PATH: 'swoole'
+  build-84-swoole:
+    desc: 'Build the image for PHP 8.4'
+    cmds:
+        - task: build
+          vars:
+            PHP_VERSION: '8.4'
+            DOCKERFILE_PATH: 'swoole'
+  push-84-swoole:
+    desc: 'Push the image for PHP 8.4'
+    deps: ['build-84-swoole']
+    cmds:
+        - task: push
+          vars:
+            PHP_VERSION: '8.4'
+            DOCKERFILE_PATH: 'swoole'
+  build:
+    internal: true
+    requires:
+      vars: [PHP_VERSION, DOCKERFILE_PATH]
+    vars:
+      SOURCE_DIR: 'source'
+    cmds:
+      - docker build -t "{{.IMAGE}}:{{.PHP_VERSION}}-{{.DOCKERFILE_PATH}}" -f {{.DOCKERFILE_PATH}}/Dockerfile {{.TASKFILE_DIR}} --build-arg PHP_VERSION={{.PHP_VERSION|replace "." ""}} --build-arg SOURCE_DIR={{.SOURCE_DIR}}
+  push:
+    internal: true
+    desc: 'Push the image'
+    requires:
+      vars: [ PHP_VERSION, DOCKERFILE_PATH ]
+    cmds:
+      - docker push "{{.IMAGE}}:{{.PHP_VERSION}}-{{.DOCKERFILE_PATH}}"
