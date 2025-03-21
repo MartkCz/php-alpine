@@ -37,6 +37,7 @@ RUN apk add --no-cache \
     "php$BUILD_PHP_VERSION-pdo_mysql" \
     "php$BUILD_PHP_VERSION-pdo_sqlite" \
     "php$BUILD_PHP_VERSION-iconv" \
+    "php$BUILD_PHP_VERSION-fileinfo" \
 	"php$BUILD_PHP_VERSION-pecl-igbinary" \
     "php$BUILD_PHP_VERSION-redis" \
     "php$BUILD_PHP_VERSION-pecl-ds" \
@@ -47,7 +48,7 @@ COPY "$SOURCE_DIR/php.ini" "/etc/php$BUILD_PHP_VERSION/conf.d/custom.ini"
 COPY --chmod=0755 "$SOURCE_DIR/entrypoint.sh" /
 
 ## Symlinks
-RUN rm -f /usr/bin/php & ln -s /usr/bin/php${BUILD_PHP_VERSION} /usr/bin/php
+RUN rm -f /usr/bin/php && ln -s /usr/bin/php${BUILD_PHP_VERSION} /usr/bin/php
 
 STOPSIGNAL SIGQUIT
 
