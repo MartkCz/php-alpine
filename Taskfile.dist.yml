@@ -4,48 +4,64 @@ env:
   IMAGE: martkcz/php-alpine
 
 tasks:
-  build-83-swoole:
-    desc: 'Build the image for PHP 8.3'
-    cmds:
-        - task: build
-          vars:
-            PHP_VERSION: '8.3'
-            DOCKERFILE_PATH: 'swoole'
-  push-83-swoole:
-    desc: 'Push the image for PHP 8.3'
-    deps: ['build-83-swoole']
-    cmds:
-        - task: push
-          vars:
-            PHP_VERSION: '8.3'
-            DOCKERFILE_PATH: 'swoole'
-  build-84-swoole:
-    desc: 'Build the image for PHP 8.4'
-    cmds:
-        - task: build
-          vars:
-            PHP_VERSION: '8.4'
-            DOCKERFILE_PATH: 'swoole'
-  push-84-swoole:
-    desc: 'Push the image for PHP 8.4'
-    deps: ['build-84-swoole']
-    cmds:
-        - task: push
-          vars:
-            PHP_VERSION: '8.4'
-            DOCKERFILE_PATH: 'swoole'
   build:
+    desc: 'Build all images'
+    cmds:
+      - for:
+          matrix:
+            VERSION: ['8.3', '8.4']
+            VARIANT: ['default', 'swoole', 'swoole_dev']
+        task: 'build-{{.ITEM.VERSION}}-{{.ITEM.VARIANT}}'
+  push:
+    desc: 'Push all images'
+    cmds:
+      - for:
+          matrix:
+            VERSION: ['8.3', '8.4']
+            VARIANT: ['default', 'swoole', 'swoole_dev']
+        task: 'push-{{.ITEM.VERSION}}-{{.ITEM.VARIANT}}'
+  build-*-*:
+    desc: 'Build the image for PHP 8.x'
+    vars:
+      PHP_VERSION: '{{index .MATCH 0}}'
+      NAMESPACE: '{{index .MATCH 1}}'
+    preconditions:
+      - echo '{{.PHP_VERSION}}' | grep -Eq '^8\.[0-9]$'
+      - test -d '{{.NAMESPACE}}'
+    cmds:
+      - task: _build
+        vars:
+          PHP_VERSION: '{{.PHP_VERSION}}'
+          IMAGE_TAG: '{{if eq .NAMESPACE "default"}}{{.PHP_VERSION}}{{else}}{{.PHP_VERSION}}-{{.NAMESPACE}}{{end}}'
+          DOCKERFILE_PATH: '{{.NAMESPACE}}'
+  push-*-*:
+    desc: 'Push the image for PHP 8.x'
+    vars:
+      PHP_VERSION: '{{index .MATCH 0}}'
+      NAMESPACE: '{{index .MATCH 1}}'
+    preconditions:
+      - echo '{{.PHP_VERSION}}' | grep -Eq '^8\.[0-9]$'
+      - test -d '{{.NAMESPACE}}'
+    deps:
+      - build-{{.PHP_VERSION}}-{{.NAMESPACE}}
+    cmds:
+      - task: _push
+        vars:
+          PHP_VERSION: '{{.PHP_VERSION}}'
+          IMAGE_TAG: '{{if eq .NAMESPACE "default"}}{{.PHP_VERSION}}{{else}}{{.PHP_VERSION}}-{{.NAMESPACE}}{{end}}'
+          DOCKERFILE_PATH: '{{.NAMESPACE}}'
+  _build:
     internal: true
     requires:
-      vars: [PHP_VERSION, DOCKERFILE_PATH]
+      vars: [PHP_VERSION, DOCKERFILE_PATH, IMAGE_TAG]
     vars:
       SOURCE_DIR: 'source'
     cmds:
-      - docker build -t "{{.IMAGE}}:{{.PHP_VERSION}}-{{.DOCKERFILE_PATH}}" -f {{.DOCKERFILE_PATH}}/Dockerfile {{.TASKFILE_DIR}} --build-arg PHP_VERSION={{.PHP_VERSION|replace "." ""}} --build-arg SOURCE_DIR={{.SOURCE_DIR}}
-  push:
+      - docker build -t "{{.IMAGE}}:{{.IMAGE_TAG}}" -f {{.DOCKERFILE_PATH}}/{{.DOCKERFILE_NAME|default "Dockerfile" }} {{.TASKFILE_DIR}} --build-arg PHP_VERSION={{.PHP_VERSION|replace "." ""}} --build-arg BASE_IMAGE='{{.IMAGE}}:{{.PHP_VERSION}}' --build-arg SOURCE_DIR={{.SOURCE_DIR}}
+  _push:
     internal: true
     desc: 'Push the image'
     requires:
-      vars: [ PHP_VERSION, DOCKERFILE_PATH ]
+      vars: [ PHP_VERSION, DOCKERFILE_PATH, IMAGE_TAG]
     cmds:
-      - docker push "{{.IMAGE}}:{{.PHP_VERSION}}-{{.DOCKERFILE_PATH}}"
+      - docker push "{{.IMAGE}}:{{.IMAGE_TAG}}"
