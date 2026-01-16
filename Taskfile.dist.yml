@@ -1,67 +1,61 @@
 version: 3
 
+includes:
+  tests: ./tests
+  builder: ./variants/builder
+  variants: ./variants
+
 env:
   IMAGE: martkcz/php-alpine
+  LATEST_VERSION: 8.5
+  PHP_VERSIONS: [ 8.5, 8.4 ]
 
 tasks:
+  test:
+    desc: 'Run all tests'
+    cmds:
+      - for:
+          var: PHP_VERSIONS
+          as: ITEM
+        task: tests:run
+        vars:
+          IMAGE: '{{.IMAGE}}'
+          PHP_VERSION: '{{.ITEM}}'
   build:
-    desc: 'Build all images'
+    desc: 'Build all variants and push to Docker Hub'
     cmds:
       - for:
-          matrix:
-            VERSION: ['8.3', '8.4']
-            VARIANT: ['default', 'swoole', 'swoole_dev']
-        task: 'build-{{.ITEM.VERSION}}-{{.ITEM.VARIANT}}'
-  push:
-    desc: 'Push all images'
-    cmds:
-      - for:
-          matrix:
-            VERSION: ['8.3', '8.4']
-            VARIANT: ['default', 'swoole', 'swoole_dev']
-        task: 'push-{{.ITEM.VERSION}}-{{.ITEM.VARIANT}}'
-  build-*-*:
-    desc: 'Build the image for PHP 8.x'
-    vars:
-      PHP_VERSION: '{{index .MATCH 0}}'
-      NAMESPACE: '{{index .MATCH 1}}'
-    preconditions:
-      - echo '{{.PHP_VERSION}}' | grep -Eq '^8\.[0-9]$'
-      - test -d '{{.NAMESPACE}}'
-    cmds:
-      - task: _build
+          var: PHP_VERSIONS
+          as: ITEM
+        task: _build
         vars:
-          PHP_VERSION: '{{.PHP_VERSION}}'
-          IMAGE_TAG: '{{if eq .NAMESPACE "default"}}{{.PHP_VERSION}}{{else}}{{.PHP_VERSION}}-{{.NAMESPACE}}{{end}}'
-          DOCKERFILE_PATH: '{{.NAMESPACE}}'
-  push-*-*:
-    desc: 'Push the image for PHP 8.x'
-    vars:
-      PHP_VERSION: '{{index .MATCH 0}}'
-      NAMESPACE: '{{index .MATCH 1}}'
-    preconditions:
-      - echo '{{.PHP_VERSION}}' | grep -Eq '^8\.[0-9]$'
-      - test -d '{{.NAMESPACE}}'
-    deps:
-      - build-{{.PHP_VERSION}}-{{.NAMESPACE}}
-    cmds:
-      - task: _push
-        vars:
-          PHP_VERSION: '{{.PHP_VERSION}}'
-          IMAGE_TAG: '{{if eq .NAMESPACE "default"}}{{.PHP_VERSION}}{{else}}{{.PHP_VERSION}}-{{.NAMESPACE}}{{end}}'
-          DOCKERFILE_PATH: '{{.NAMESPACE}}'
+          PHP_VERSION: '{{.ITEM}}'
   _build:
+    desc: 'Build image for specific PHP version'
     internal: true
     requires:
-      vars: [PHP_VERSION, DOCKERFILE_PATH, IMAGE_TAG]
-    vars:
-      SOURCE_DIR: 'source'
+      vars: [ PHP_VERSION ]
     cmds:
-      - docker build -t "{{.IMAGE}}:{{.IMAGE_TAG}}" -f {{.DOCKERFILE_PATH}}/{{.DOCKERFILE_NAME|default "Dockerfile" }} {{.TASKFILE_DIR}} --build-arg PHP_VERSION={{.PHP_VERSION|replace "." ""}} --build-arg BASE_IMAGE='{{.IMAGE}}:{{.PHP_VERSION}}' --build-arg SOURCE_DIR={{.SOURCE_DIR}}
-  _push:
-    internal: true
-    desc: 'Push the image'
-    requires:
-      vars: [ PHP_VERSION, DOCKERFILE_PATH, IMAGE_TAG]
+      - task: builder:build
+        vars:
+          PHP_VERSION: '{{ .PHP_VERSION }}'
+          IMAGE: '{{ .IMAGE }}'
+      - task: variants:build-roadrunner
+        vars:
+          PHP_VERSION: '{{ .PHP_VERSION }}'
+          IMAGE: '{{ .IMAGE }}'
+      - task: variants:build
+        vars:
+          PHP_VERSION: '{{ .PHP_VERSION }}'
+          IMAGE: '{{ .IMAGE }}'
+  php-version:
+    desc: 'Print PHP version of the current image'
     cmds:
-      - docker push "{{.IMAGE}}:{{.IMAGE_TAG}}"
+      - docker run --rm "{{ .IMAGE }}:{{ .LATEST_VERSION }}-builder" php -v
+  default:
+    cmds:
+      - task: builder:build
+      - task: variants:build-roadrunner
+      - task: variants:build
+      - task: variants:push-roadrunner
+      - task: variants:push

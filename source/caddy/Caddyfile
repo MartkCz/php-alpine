@@ -1,0 +1,55 @@
+{
+	skip_install_trust
+	metrics
+	auto_https off
+
+    servers {
+        protocols h1
+        enable_full_duplex # PHP streaming
+    }
+
+	frankenphp {
+	    num_threads {$SERVER_WORKERS:2}
+	    max_threads {$SERVER_WORKERS:2}
+	}
+}
+
+
+http://localhost:8080 {
+	#log {
+	#	# Redact the authorization query parameter that can be set by Mercure
+	#	format filter {
+	#		request>uri query {
+	#			replace authorization REDACTED
+	#		}
+	#	}
+	#}
+
+	root /app/public
+	encode zstd br gzip
+
+	# Uncomment the following lines to enable Mercure and Vulcain modules
+	#mercure {
+	#	# Transport to use (default to Bolt)
+	#	transport_url {$MERCURE_TRANSPORT_URL:bolt:///data/mercure.db}
+	#	# Publisher JWT key
+	#	publisher_jwt {env.MERCURE_PUBLISHER_JWT_KEY} {env.MERCURE_PUBLISHER_JWT_ALG}
+	#	# Subscriber JWT key
+	#	subscriber_jwt {env.MERCURE_SUBSCRIBER_JWT_KEY} {env.MERCURE_SUBSCRIBER_JWT_ALG}
+	#	# Allow anonymous subscribers (double-check that it's what you want)
+	#	anonymous
+	#	# Enable the subscription API (double-check that it's what you want)
+	#	subscriptions
+	#	# Extra directives
+	#	{$MERCURE_EXTRA_DIRECTIVES}
+	#}
+	#vulcain
+
+	php_server {
+		worker {
+		    file /app/public/index.php
+		    watch
+		}
+	}
+}
+

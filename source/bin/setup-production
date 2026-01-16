@@ -1,0 +1,19 @@
+#!/usr/bin/env sh
+
+set -e
+
+if [ ! -f "/usr/local/etc/php/conf.d/00_xdebug.ini" ]; then
+  echo "00_xdebug.ini file not found."
+
+  exit 1
+fi
+
+if [ ! -f "/usr/local/etc/php/conf.d/10_xdebug.ini" ]; then
+  echo "10_xdebug.ini file not found."
+
+  exit 1
+fi
+
+rm /usr/local/etc/php/conf.d/00_xdebug.ini /usr/local/etc/php/conf.d/10_xdebug.ini
+
+mv "$PHP_INI_DIR/php.ini-production" "$PHP_INI_DIR/php.ini"

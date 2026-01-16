@@ -1,0 +1,19 @@
+version: 3
+
+tasks:
+  build:
+    cmds:
+      - for:
+          matrix:
+            VERSION: [ '8.4' ]
+        task: _build
+        vars:
+          PHP_VERSION: '{{.ITEM.VERSION}}'
+  _build:
+    internal: true
+    vars:
+      TAG: 'roadrunner'
+    requires:
+      vars: [ PHP_VERSION, IMAGE ]
+    cmds:
+      - docker build -t "{{.IMAGE}}:{{.PHP_VERSION}}-{{.TAG}}" -f {{.TASKFILE_DIR}}/Dockerfile . --build-arg php_version={{.PHP_VERSION}}

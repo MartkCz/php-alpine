@@ -1,0 +1,8 @@
+version: 3
+
+tasks:
+  build:
+    requires:
+      vars: [ PHP_VERSION, IMAGE ]
+    cmds:
+      - docker build -t "{{.IMAGE}}:{{.PHP_VERSION}}-builder" -f {{.TASKFILE_DIR}}/Dockerfile . --build-arg php_version={{.PHP_VERSION}}

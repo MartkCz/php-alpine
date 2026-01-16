@@ -4,17 +4,23 @@ Docker hub: https://hub.docker.com/r/martkcz/php-alpine
 
 ## List of images 
 
-`martkcz/php-alpine:8.4-swoole` \
-`martkcz/php-alpine:8.3-swoole`
+`martkcz/php-alpine:8.4` \
+`martkcz/php-alpine:8.3` \
+`martkcz/php-alpine:8.4-roadrunner` \
+`martkcz/php-alpine:8.3-roadrunner`
 
 ## Building and pushing images
 
 ```sh
-# PHP 8.4
-task build-84-swoole
-task push-84-swoole
+task builder:build
+task build
+task build-roadrunner
+task push
+task push-roadrunner
+```
 
-# PHP 8.3
-task build-83-swoole
-task push-83-swoole
+## Testing images
+
+```sh
+task tests:run
 ```

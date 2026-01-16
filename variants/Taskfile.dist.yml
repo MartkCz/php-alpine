@@ -1,0 +1,58 @@
+version: 3
+
+tasks:
+  build:
+    cmds:
+      - task: _build
+        vars:
+          TAG: ''
+          DOCKERFILE_DIR: 'default'
+          PHP_VERSION: '{{ .PHP_VERSION }}'
+          IMAGE: '{{ .IMAGE }}'
+  push:
+    cmds:
+      - task: _push
+        vars:
+          TAG: ''
+          DOCKERFILE_DIR: 'default'
+          PHP_VERSION: '{{ .PHP_VERSION }}'
+          IMAGE: '{{ .IMAGE }}'
+  build-franken:
+    cmds:
+      - task: _build
+        vars:
+          TAG: '-franken'
+          DOCKERFILE_DIR: 'franken'
+          PHP_VERSION: '{{ .PHP_VERSION }}'
+          IMAGE: '{{ .IMAGE }}'
+  build-roadrunner:
+    cmds:
+      - task: _build
+        vars:
+          TAG: '-roadrunner'
+          DOCKERFILE_DIR: 'roadrunner'
+          PHP_VERSION: '{{ .PHP_VERSION }}'
+          IMAGE: '{{ .IMAGE }}'
+  push-roadrunner:
+    requires:
+      vars: [ PHP_VERSION, IMAGE ]
+    cmds:
+      - task: _push
+        vars:
+          TAG: '-roadrunner'
+          DOCKERFILE_DIR: 'roadrunner'
+          PHP_VERSION: '{{ .PHP_VERSION }}'
+          IMAGE: '{{ .IMAGE }}'
+  _build:
+    internal: true
+    requires:
+      vars: [ PHP_VERSION, IMAGE, TAG, DOCKERFILE_DIR ]
+    cmds:
+      - docker build -t "{{.IMAGE}}:{{.PHP_VERSION}}{{.TAG}}" -f {{.TASKFILE_DIR}}/{{.DOCKERFILE_DIR}}/Dockerfile . --build-arg php_version={{.PHP_VERSION}}
+  _push:
+    internal: true
+    desc: 'Push the image'
+    requires:
+      vars: [ PHP_VERSION, IMAGE, TAG, DOCKERFILE_DIR ]
+    cmds:
+      - docker push "{{.IMAGE}}:{{.PHP_VERSION}}{{.TAG}}"
