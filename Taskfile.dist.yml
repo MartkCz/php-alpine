@@ -30,6 +30,15 @@ tasks:
         task: _build
         vars:
           PHP_VERSION: '{{.ITEM}}'
+  push:
+    desc: 'Push all variants to Docker Hub'
+    cmds:
+      - for:
+          var: PHP_VERSIONS
+          as: ITEM
+        task: _push
+        vars:
+          PHP_VERSION: '{{.ITEM}}'
   _build:
     desc: 'Build image for specific PHP version'
     internal: true
@@ -45,6 +54,20 @@ tasks:
           PHP_VERSION: '{{ .PHP_VERSION }}'
           IMAGE: '{{ .IMAGE }}'
       - task: variants:build
+        vars:
+          PHP_VERSION: '{{ .PHP_VERSION }}'
+          IMAGE: '{{ .IMAGE }}'
+  _push:
+    desc: 'Push image for specific PHP version'
+    internal: true
+    requires:
+      vars: [ PHP_VERSION ]
+    cmds:
+      - task: variants:push-roadrunner
+        vars:
+          PHP_VERSION: '{{ .PHP_VERSION }}'
+          IMAGE: '{{ .IMAGE }}'
+      - task: variants:push
         vars:
           PHP_VERSION: '{{ .PHP_VERSION }}'
           IMAGE: '{{ .IMAGE }}'
