@@ -4,7 +4,6 @@ FROM dunglas/frankenphp:1.9.1-php${php_version}-alpine
 
 ENV BUILD_HOME=/app
 ENV BUILD_STARTUP=/startup
-ENV XDEBUG_MODE=off
 
 RUN mkdir /startup
 

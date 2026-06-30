@@ -2,4 +2,4 @@
 
 set -e
 
-XDEBUG_MODE=debug php "$@"
+php -dxdebug.mode=debug "$@"

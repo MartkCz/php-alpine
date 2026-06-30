@@ -3,10 +3,10 @@ version: 3
 tasks:
   run:
     desc: 'Run the tests'
-    vars:
-      requires: [IMAGE, PHP_VERSION]
+    requires:
+      vars: [IMAGE, PHP_VERSION]
     cmds:
-      - sh '{{.TASKFILE_DIR}}/tests.sh' '{{.IMAGE}}:{{.PHP_VERSION}}-roadrunner'
+      - sh '{{.TASKFILE_DIR}}/tests.sh' '{{.IMAGE}}:{{.PHP_VERSION}}{{.TAG}}'
   benchmark:
     desc: 'Run benchmark'
     requires:

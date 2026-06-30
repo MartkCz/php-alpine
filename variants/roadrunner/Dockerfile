@@ -1,12 +1,11 @@
 ARG php_version=8.5
 
-FROM ghcr.io/roadrunner-server/roadrunner:2025.1.6 AS roadrunner
+FROM ghcr.io/roadrunner-server/roadrunner:2025.1.15 AS roadrunner
 FROM martkcz/php-alpine:${php_version}-builder AS build
 FROM alpine:3.23
 
 ENV BUILD_HOME=/app
 ENV BUILD_STARTUP=/startup
-ENV XDEBUG_MODE=off
 
 RUN mkdir /startup
 
@@ -14,7 +13,7 @@ RUN mkdir /startup
 RUN apk add --no-cache \
 		gmp \
 		go-task \
-        icu icu-libs \
+        icu icu-libs icu-data-full \
         libzip \
         brotli \
         libuuid \

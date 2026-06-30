@@ -6,7 +6,6 @@ FROM alpine:3.23
 
 ENV BUILD_HOME=/app
 ENV BUILD_STARTUP=/startup
-ENV XDEBUG_MODE=off
 
 RUN mkdir /startup
 
@@ -16,7 +15,7 @@ RUN apk add --no-cache libuuid --repository=http://dl-cdn.alpinelinux.org/alpine
 RUN apk add --no-cache \
 		gmp \
 		go-task \
-        icu icu-libs \
+        icu icu-libs icu-data-full \
         libzip \
         brotli \
         libpng libavif libwebp libjpeg-turbo freetype

@@ -8,19 +8,34 @@ includes:
 env:
   IMAGE: martkcz/php-alpine
   LATEST_VERSION: 8.5
-  PHP_VERSIONS: [ 8.5, 8.4 ]
+  PHP_VERSIONS: [ 8.5 ]
 
 tasks:
   test:
-    desc: 'Run all tests'
+    desc: 'Run all tests for all variants'
     cmds:
       - for:
           var: PHP_VERSIONS
           as: ITEM
+        task: _test
+        vars:
+          PHP_VERSION: '{{.ITEM}}'
+  _test:
+    desc: 'Run tests of all variants for specific PHP version'
+    internal: true
+    requires:
+      vars: [ PHP_VERSION ]
+    cmds:
+      - for: [
+          '',
+          '-roadrunner',
+#          '-franken'
+        ]
         task: tests:run
         vars:
           IMAGE: '{{.IMAGE}}'
-          PHP_VERSION: '{{.ITEM}}'
+          PHP_VERSION: '{{.PHP_VERSION}}'
+          TAG: '{{.ITEM}}'
   build:
     desc: 'Build all variants and push to Docker Hub'
     cmds:
@@ -28,6 +43,15 @@ tasks:
           var: PHP_VERSIONS
           as: ITEM
         task: _build
+        vars:
+          PHP_VERSION: '{{.ITEM}}'
+  build-variants:
+    desc: 'Build only variant images (without builder) for all PHP versions'
+    cmds:
+      - for:
+          var: PHP_VERSIONS
+          as: ITEM
+        task: _build-variants
         vars:
           PHP_VERSION: '{{.ITEM}}'
   push:
@@ -57,6 +81,24 @@ tasks:
         vars:
           PHP_VERSION: '{{ .PHP_VERSION }}'
           IMAGE: '{{ .IMAGE }}'
+  _build-variants:
+    desc: 'Build variant images (without builder) for specific PHP version'
+    internal: true
+    requires:
+      vars: [ PHP_VERSION ]
+    cmds:
+      - task: variants:build-roadrunner
+        vars:
+          PHP_VERSION: '{{ .PHP_VERSION }}'
+          IMAGE: '{{ .IMAGE }}'
+      - task: variants:build
+        vars:
+          PHP_VERSION: '{{ .PHP_VERSION }}'
+          IMAGE: '{{ .IMAGE }}'
+#      - task: variants:build-franken
+#        vars:
+#          PHP_VERSION: '{{ .PHP_VERSION }}'
+#          IMAGE: '{{ .IMAGE }}'
   _push:
     desc: 'Push image for specific PHP version'
     internal: true
@@ -75,6 +117,27 @@ tasks:
     desc: 'Print PHP version of the current image'
     cmds:
       - docker run --rm "{{ .IMAGE }}:{{ .LATEST_VERSION }}-builder" php -v
+  versions:
+    desc: 'Write all extension versions of each PHP variant to versions.md'
+    cmds:
+      - echo '# Extension versions' > versions.md
+      - for:
+          var: PHP_VERSIONS
+          as: ITEM
+        task: _versions
+        vars:
+          PHP_VERSION: '{{.ITEM}}'
+  _versions:
+    internal: true
+    requires:
+      vars: [ PHP_VERSION ]
+    cmds:
+      - echo '' >> versions.md
+      - echo '## PHP {{ .PHP_VERSION }}' >> versions.md
+      - echo '' >> versions.md
+      - echo '| Extension | Version |' >> versions.md
+      - echo '| --- | --- |' >> versions.md
+      - docker run --rm "{{ .IMAGE }}:{{ .PHP_VERSION }}" php -r 'foreach (get_loaded_extensions() as $ext) { echo "| " . $ext . " | " . phpversion($ext) . " |" . PHP_EOL; }' >> versions.md
   default:
     cmds:
       - task: builder:build

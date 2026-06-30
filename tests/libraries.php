@@ -61,6 +61,10 @@ $formatted = $formatter->formatCurrency(1234.56, 'USD');
 
 assert($formatted === '$1,234.56');
 
+$t = Transliterator::create('Any-Latin; Latin-ASCII');
+
+assert($t->transliterate('你好世界') === 'ni hao shi jie');
+
 // test gd
 foreach ($imageFormats as $format) {
 	$image = imagecreatefromstring(file_get_contents(__DIR__ . "/assets/image.$format"));
