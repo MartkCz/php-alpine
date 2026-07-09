@@ -16,6 +16,7 @@ RUN apk add --no-cache \
         icu icu-libs icu-data-full \
         libzip \
         brotli \
+        imagemagick \
         libuuid \
         libpng libavif libwebp libjpeg-turbo freetype
 

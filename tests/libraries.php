@@ -107,6 +107,17 @@ foreach ($imageFormats as $format) {
 	}
 }
 
+// test imagick
+$imagick = new Imagick(__DIR__ . '/assets/image.png');
+
+assert($imagick->getImageWidth() > 0);
+assert($imagick->getImageHeight() > 0);
+
+$imagick->resizeImage(10, 10, Imagick::FILTER_LANCZOS, 1);
+
+assert($imagick->getImageWidth() === 10);
+assert($imagick->getImageHeight() === 10);
+
 // test pcntl
 $fn = static fn () => true;
 
@@ -127,6 +138,7 @@ $extensions = [
 	'exif',
 	'gmp',
 	'igbinary',
+	'imagick',
 	'intl',
 	'gd',
 	'pcntl',

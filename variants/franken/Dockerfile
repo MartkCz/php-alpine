@@ -9,7 +9,7 @@ RUN mkdir /startup
 
 # PHP extensions
 RUN install-php-extensions opcache bcmath exif gmp intl zip sockets pdo_mysql gd pcntl \
-    uuid brotli ds igbinary redis \
+    uuid brotli ds igbinary imagick redis \
     @composer
 
 # Custom libraries

@@ -21,13 +21,14 @@ RUN apk add --no-cache --virtual .build-deps gmp-dev icu-dev libzip-dev libpng-d
     && docker-php-ext-configure pcntl --enable-pcntl && docker-php-ext-install -j$(nproc) pcntl \
     && apk del --no-network .build-deps
 
-# Pecl (brotli, ds, igbinary, redis, xdebug, uopz)
+# Pecl (brotli, ds, igbinary, imagick, redis, xdebug, uopz)
 # util-linux-dev for uuid (from edge, requires sqlite-libs upgrade due to version mismatch)
 #RUN apk add --no-cache sqlite-libs util-linux-dev --repository=http://dl-cdn.alpinelinux.org/alpine/edge/main --allow-untrusted
-RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS linux-headers brotli-dev util-linux-dev \
+RUN apk add --no-cache --virtual .build-deps $PHPIZE_DEPS linux-headers brotli-dev util-linux-dev imagemagick-dev \
     && pecl install brotli-0.18.3 && docker-php-ext-enable brotli \
     && pecl install ds-1.6.0 && docker-php-ext-enable ds \
     && pecl install igbinary-3.2.17RC1 && docker-php-ext-enable igbinary \
+    && pecl install imagick-3.8.1 && docker-php-ext-enable imagick \
     && pecl install redis-6.3.0 && docker-php-ext-enable redis \
     && pecl install xdebug-3.5.0 && docker-php-ext-enable xdebug \
     && apk del --no-network .build-deps
